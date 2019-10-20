@@ -1,0 +1,111 @@
+
+$RoughFilter = "\.(?:license|lic|exe|xml|key|cfg|config|pdb|yaml)$|(?:^qauth)"
+
+$FineFilter = "(?:^qauth)|(?:\.license$)|(?:^(EW|Sketchup)\.lic$)|" +
+   "(?:^(?:HP|SCHDRES).*\.cfg$)|(?:^(?:config|setuptools)\.yaml$)|" +
+   "(?:^(?:py.*|powerforensics)\.pdb$)|(?:^(?:policy*ink*|.*exe.*)\.config$)|" +
+   "(?:^(?:hp.A|wininst).*\.exe$)|(?:.*snakeoil.*\.key$)" +
+   "(?:^(?:xmlfile|tv|previousplatforms)\.xml$)"
+
+$FineFilterFullname = "(?:\\qauth[^\\]*)|(?:\.license$)|(?:\\(EW|Sketchup)\.lic$)|" +
+   "(?:\\(?:HP|SCHDRES)[^\\]*\.cfg$)|(?:\\(?:config|setuptools)\.yaml$)|" +
+   "(?:\\(?:py.*|powerforensics)\.pdb$)|(?:\\(?:policy*ink*|.*exe.*)\.config$)|" +
+   "(?:\\(?:hp.A|wininst)[^\\]*\.exe$)|(?:\\[^\\]*snakeoil[^\\]*\.key$)" +
+   "(?:\\(?:xmlfile|tv|previousplatforms)\.xml$)"
+
+$RoughFilterFullname = "\.(?:license|lic|exe|xml|key|cfg|config|pdb|yaml)$|(?:\\qauth[^\\]*)"
+
+#===================================================
+# How fast is the FineFilterFullname regex pattern?
+& "C:\Users\New User\downloads\EmptyStandbyList.exe" "standbylist"
+Measure-Command{
+  gc C:\temp\audit.all | 
+    ? {$_ -match $FineFilterFullname} | 
+    measure
+}
+
+TotalSeconds      : 196.6282637
+
+#======================================================
+# What if we just match against the file name (not path)
+& "C:\Users\New User\downloads\EmptyStandbyList.exe" "standbylist"
+Measure-Command{
+  gc C:\temp\audit.all | 
+    ? {$_.split('\')[-1] -match $FineFilter} | 
+    measure
+}
+
+TotalSeconds      : 188.0051173
+
+#================================================
+# What if we pre-filter with the RoughFilter pattern?
+& "C:\Users\New User\downloads\EmptyStandbyList.exe" "standbylist"
+Measure-Command{
+ gc C:\temp\audit.all |
+   ? {$_.split('\')[-1] -match $RoughFilter} |
+   ? {$_.split('\')[-1] -match $FineFilter} |
+   measure
+}
+
+TotalSeconds      : 90.1440281
+
+#================================================
+# What if we buffered the I/O in addition to dual filtering?
+# * WE HAVE A WINNER
+& "C:\Users\New User\downloads\EmptyStandbyList.exe" "standbylist"
+Measure-Command{
+ gc C:\temp\audit.all -ReadCount 2000 |
+   %{
+     foreach ($line in $_){
+       if ($line.split('\')[-1] -match $RoughFilter){
+	     write $line
+       }
+     }
+   } |
+   ? {$_.split('\')[-1] -match $FineFilter} |
+   measure
+}
+
+TotalSeconds      : 35.9585454
+TotalSeconds      : 35.4715485
+TotalSeconds      : 35.4732423
+
+#===================================================
+# Just for science, what about using the -File option 
+# on the switch statement.
+# ** ALMOST AS FAST AS THE ROUGH FILTER
+& "C:\Users\New User\downloads\EmptyStandbyList.exe" "standbylist"
+Measure-Command{
+  $sw = switch -regex -File C:\temp\audit.all{
+    $FineFilterFullname {$_}
+  }
+  $sw | measure
+  remove-variable sw
+}
+
+TotalSeconds      : 116.1179485
+
+break
+
+#==========================================
+#==========================================
+# What if we combine the I/O efficiency of the -File option
+# with rough filtering?
+# ** SECOND PLACE - switch doesn't play well
+#    with the pipeline
+& "C:\Users\New User\downloads\EmptyStandbyList.exe" "standbylist"
+Measure-Command{
+  $sw = switch -regex -File C:\temp\audit.all{
+    $RoughFilterFullname {$_}
+  }
+  $sw | 
+   ? {$_.split('\')[-1] -match $FineFilter} |
+   measure
+  #remove-variable sw
+}
+
+TotalSeconds      : 38.6597483
+TotalSeconds      : 36.7225609
+TotalSeconds      : 34.4426064
+TotalSeconds      : 36.8864409
+TotalSeconds      : 35.0284675

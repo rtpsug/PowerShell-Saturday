@@ -1,0 +1,20 @@
+* My file filters (wildcard spec)
+	*.LICENSE
+	EW.lic
+	Sketchup.lic
+	Qecr.lic
+	HP*.cfg
+	SCHDRES*.CFG
+	config.yaml
+	setuptools.yaml
+	py*.pdb
+	powerforensics.pdb
+	policy*ink*.config
+	*exe*.config
+	hp?A*.exe
+	wininst*.exe
+	xmlfile.xml
+	tv.xml
+	PreviousPlatforms.xml	
+	*snakeoil*.key
+	qauth*
