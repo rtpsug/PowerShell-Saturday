@@ -2,7 +2,7 @@
 
 ## Direct Link
 
-Here are the slides for my presentation [Crossing the Divide - A System Administrator's Path to DevOps](https://github.com/thedavecarroll/Presentations/blob/master/2019/RTPSUG-PSSaturday/SysadminPathToDevOps.pptx).
+Here are the slides for my presentation [Crossing the Divide - A System Administrator's Path to DevOps](https://github.com/thedavecarroll/Presentations/blob/main/2019/RTPSUG-PSSaturday/SysadminPathToDevOps.pptx).
 
 ## All Presentations
 
